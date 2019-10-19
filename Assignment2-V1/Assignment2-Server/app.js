@@ -5,6 +5,10 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const helmet = require('helmet');
 
+// import custom modules
+const redisClient = require("./modules/redisDriver");
+const loggerUtil = require("./modules/logger.js");
+
 const indexRouter = require('./routes/index');
 const twitterRouter = require('./routes/twitterRouter');
 
@@ -38,6 +42,16 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render('error');
+});
+
+redisClient.on('connect', () => {
+  loggerUtil.log("Established connection to Redis.");
+});
+
+redisClient.on('error', err => {
+  loggerUtil.error("Unable to connect to Redis, terminating.")
+  loggerUtil.error(`${err}`);
+  process.exit(1); // fail with exit code 1
 });
 
 module.exports = app;
