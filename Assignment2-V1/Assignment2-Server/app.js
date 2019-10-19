@@ -51,7 +51,7 @@ redisClient.on('connect', () => {
 redisClient.on('error', err => {
   loggerUtil.error("Unable to connect to Redis, terminating.")
   loggerUtil.error(`${err}`);
-  process.exit(1); // fail with exit code 1
+  //process.exit(1); // fail with exit code 1 (comment out for debug)
 });
 
 module.exports = app;
