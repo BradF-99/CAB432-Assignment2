@@ -1,6 +1,7 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
+// to do replace keys with env vars or config file
 const Twitter = require('twitter');
 const client = new Twitter({
   consumer_key: 'oKVH5nvDsrg80ukJ8LdjUKUg3',
@@ -9,8 +10,7 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
-/* GET users listing. */
-router.get('/:query', function(req, res, next) {
+router.get('/:query', function(req, res) {
   if(req.params.query){
     returnTwitterData(res,req.params.query) 
   } else {
