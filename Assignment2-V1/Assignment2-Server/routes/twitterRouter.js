@@ -10,18 +10,18 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
-router.get('/:query', function(req, res) {
-  if(req.params.query){
-    returnTwitterData(res,req.params.query) 
+router.get('/:query', async (req, res) => {
+  if (req.params.query) {
+    try {
+      const data = await getTwitterData(req.params.query);
+      return res.json(data);
+    } catch (e) {
+      next(e); // this will end up in the error handler
+    }
   } else {
     res.send('respond with a resource');
   }
 });
-
-async function returnTwitterData(res,query){
-  const data = await getTwitterData(query)
-  return res.json(data);
-}
 
 async function getTwitterData(query){
   return new Promise(function(resolve,reject){
