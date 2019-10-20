@@ -10,10 +10,14 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
+const { SentimentManager } = require('node-nlp');
+const sentiment = new SentimentManager();
+
 router.get('/:query', async (req, res) => {
   if (req.params.query) {
     try {
-      const data = await getTwitterData(req.params.query);
+      const tweetQueue = await getTwitterData(req.params.query);
+      const data = await processTweets(tweetQueue);
       return res.json(data);
     } catch (e) {
       next(e); // this will end up in the error handler
@@ -25,19 +29,47 @@ router.get('/:query', async (req, res) => {
 
 async function getTwitterData(query){
   return new Promise(function(resolve,reject){
-    data = [];
+    let fetchQueue = [];
+    let data = [];
+
     client.get('search/tweets', {q:"#"+query, count:100}, function(error, tweets, response) {
       if (!error) {
         for(i = 0; i < tweets.statuses.length; i++){
-            tweet = tweets["statuses"][i]["text"];
-            data.push(tweet)
+            fetchQueue.push(getSentiment(tweets["statuses"][i]["text"]));
         }
-        resolve(data)
+        resolve(fetchQueue)
       } else {
-          reject(error)
+        reject(error);
       }
     });
   })
+}
+
+async function processTweets(fetchQueue){
+  let data = [];
+
+  const results = await Promise.all(fetchQueue);
+  for (const result of results) {
+    data.push(result)
+  }
+  return data;
+}
+
+async function getSentiment(tweet){
+  return new Promise(function(resolve,reject){
+    sentiment
+      .process('en',tweet)
+      .then(function(result){
+        resolve([tweet,result]);
+      })
+      .catch(function(e){
+        reject(e);
+      });
+  });
+}
+
+async function guessLanguage(tweet){
+  // actually write something here 
 }
 
 module.exports = router;
