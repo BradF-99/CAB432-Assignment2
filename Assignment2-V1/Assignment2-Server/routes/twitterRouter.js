@@ -10,14 +10,15 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
-const { SentimentManager } = require('node-nlp');
+const { SentimentManager, Language } = require('node-nlp');
 const sentiment = new SentimentManager();
+const language = new Language();
 
 router.get('/:query', async (req, res) => {
   if (req.params.query) {
     try {
-      const tweetQueue = await getTwitterData(req.params.query);
-      const data = await processTweets(tweetQueue);
+      const tweets = await getTwitterData(req.params.query);
+      const data = await processTweets(tweets);
       return res.json(data);
     } catch (e) {
       next(e); // this will end up in the error handler
@@ -29,38 +30,50 @@ router.get('/:query', async (req, res) => {
 
 async function getTwitterData(query){
   return new Promise(function(resolve,reject){
-    let fetchQueue = [];
     let data = [];
 
-    client.get('search/tweets', {q:"#"+query, count:100}, function(error, tweets, response) {
+    client.get('search/tweets', {q:"#"+query, count:100}, function(error, tweets) {
       if (!error) {
         for(i = 0; i < tweets.statuses.length; i++){
-            fetchQueue.push(getSentiment(tweets["statuses"][i]["text"]));
+            data.push(tweets["statuses"][i]["text"]);
         }
-        resolve(fetchQueue)
+        resolve(data);
       } else {
         reject(error);
       }
     });
-  })
+  });
 }
 
-async function processTweets(fetchQueue){
+async function processTweets(tweets){ // guess lang and check sentiment
   let data = [];
+  let langQueue = [];
+  let sentimentQueue = [];
 
-  const results = await Promise.all(fetchQueue);
-  for (const result of results) {
-    data.push(result)
+  tweets.forEach(function(tweet){
+    langQueue.push(guessLanguage(tweet));
+  });
+
+  const langResults = await Promise.all(langQueue);
+  for (const langResult of langResults) {
+    sentimentQueue.push(getSentiment(langResult));
   }
+
+  const sentimentResults = await Promise.all(sentimentQueue);
+  for (const sentimentResult of sentimentResults) {
+    data.push(sentimentResult);
+  }
+
   return data;
 }
 
 async function getSentiment(tweet){
   return new Promise(function(resolve,reject){
     sentiment
-      .process('en',tweet)
+      .process(tweet[1],tweet[0]) // language, tweet body
       .then(function(result){
-        resolve([tweet,result]);
+        data = [tweet[0],tweet[1],result["vote"]];
+        resolve(data); // body, lang, sentiment
       })
       .catch(function(e){
         reject(e);
@@ -69,7 +82,14 @@ async function getSentiment(tweet){
 }
 
 async function guessLanguage(tweet){
-  // actually write something here 
+  return new Promise(function(resolve,reject){
+    try {
+      const guess = language.guess(tweet, null, 1); // limit result to 1
+      resolve([tweet,guess[0]["alpha2"]]); // return alpha2 code
+    } catch (e) {
+      reject(e);
+    }
+  });
 }
 
 module.exports = router;
