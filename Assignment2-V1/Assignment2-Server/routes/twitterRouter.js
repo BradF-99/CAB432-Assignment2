@@ -32,7 +32,7 @@ async function getTwitterData(query){
   return new Promise(function(resolve,reject){
     let data = [];
 
-    client.get('search/tweets', {q:"#"+query, count:100}, function(error, tweets) {
+    client.get('search/tweets', {q:"#"+query+" -filter:retweets", count:100}, function(error, tweets) {
       if (!error) {
         for(i = 0; i < tweets.statuses.length; i++){
             data.push(tweets["statuses"][i]["text"]);
