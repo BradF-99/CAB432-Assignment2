@@ -35,7 +35,16 @@ async function getTwitterData(query){
     client.get('search/tweets', {q:"#"+query+" -filter:retweets", count:100}, function(error, tweets) {
       if (!error) {
         for(i = 0; i < tweets.statuses.length; i++){
-            data.push(tweets["statuses"][i]["text"]);
+            tweet = tweets["statuses"][i];
+
+            let processedTweet = {};
+            processedTweet["text"] = tweet["text"];
+            processedTweet["date"] = tweet["created_at"];
+            processedTweet["userInfo"] = {};
+            processedTweet["userInfo"]["name"] = tweet["user"]["name"];
+            processedTweet["userInfo"]["screenName"] = tweet["user"]["screen_name"];
+
+            data.push(processedTweet);
         }
         resolve(data);
       } else {
@@ -70,10 +79,11 @@ async function processTweets(tweets){ // guess lang and check sentiment
 async function getSentiment(tweet){
   return new Promise(function(resolve,reject){
     sentiment
-      .process(tweet[1],tweet[0]) // language, tweet body
+      .process(tweet["text"],tweet["language"]) // language, tweet body
       .then(function(result){
-        data = [tweet[0],tweet[1],result["vote"]];
-        resolve(data); // body, lang, sentiment
+        const data = tweet;
+        data["sentiment"] = (result["vote"]);
+        resolve(data); // tweet data + lang + sentiment
       })
       .catch(function(e){
         reject(e);
@@ -84,8 +94,10 @@ async function getSentiment(tweet){
 async function guessLanguage(tweet){
   return new Promise(function(resolve,reject){
     try {
-      const guess = language.guess(tweet, null, 1); // limit result to 1
-      resolve([tweet,guess[0]["alpha2"]]); // return alpha2 code
+      const data = tweet;
+      const guess = language.guess(data["text"], null, 1); // limit result to 1
+      data["language"] = (guess[0]["alpha2"]);
+      resolve(data); // return alpha2 code
     } catch (e) {
       reject(e);
     }
