@@ -2,6 +2,7 @@ const redis = require("redis");
 const REDIS_URL = process.env.REDIS_URL || "//149.28.165.104:4320";
 const redisClient = redis.createClient(REDIS_URL,{password:"CAB4322019"}); // replace for production deploy
 const bluebird = require("bluebird");
+const loggerUtil = require("./logger.js");
 
 // add async to all node redis functions
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -45,8 +46,18 @@ async function scanAsync(cursor, pattern, results) {
         });
 }
 
+
+redisClient.on('connect', () => {
+    loggerUtil.log("Established connection to Redis.");
+  });
+  
+  redisClient.on('error', err => {
+    loggerUtil.error("Unable to connect to Redis, terminating.")
+    loggerUtil.error(`${err}`);
+    //process.exit(1); // fail with exit code 1 (comment out for debug)
+  });
+
 module.exports = {
-    redisClient: redisClient,
     getHashData: getHashData,
     setHashData: setHashData,
     scanAsync: scanAsync
