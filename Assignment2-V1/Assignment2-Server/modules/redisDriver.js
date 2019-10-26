@@ -33,7 +33,7 @@ async function setHashData(key, field, value) {
 }
 
 async function scanAsync(cursor, pattern, results) {
-    return redisClient.scanAsync(cursor, 'MATCH', pattern, 'COUNT', '10')
+    return redisClient.scanAsync(cursor, 'MATCH', pattern, 'COUNT', '5')
         .then(function (res) {
             let keys = res[1];
             keys.forEach(function (key) {
@@ -54,7 +54,7 @@ redisClient.on('connect', () => {
   redisClient.on('error', err => {
     loggerUtil.error("Unable to connect to Redis, terminating.")
     loggerUtil.error(`${err}`);
-    //process.exit(1); // fail with exit code 1 (comment out for debug)
+    process.exit(1);
   });
 
 module.exports = {
