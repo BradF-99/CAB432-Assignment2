@@ -14,6 +14,9 @@ const { SentimentManager, Language } = require('node-nlp');
 const sentiment = new SentimentManager();
 const language = new Language();
 
+const redisClient = require("../modules/redisDriver");
+const azureClient = require("../modules/azureDriver");
+
 router.get('/:query', async (req, res) => {
   if (req.params.query) {
     try {
