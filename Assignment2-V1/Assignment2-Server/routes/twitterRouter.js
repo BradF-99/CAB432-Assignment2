@@ -80,7 +80,7 @@ async function downloadTwitterData(query) {
     let data = [];
 
     client.get('search/tweets', {
-      q: "#" + query + " -filter:retweets",
+      q: "#" + query + " -filter:retweets lang:en",
       count: 100
     }, function (error, tweets) {
       if (!error) {
@@ -107,17 +107,11 @@ async function downloadTwitterData(query) {
 
 async function processTweets(tweets) { // guess lang and check sentiment
   let data = [];
-  let langQueue = [];
   let sentimentQueue = [];
 
   tweets.forEach(function (tweet) {
-    langQueue.push(guessLanguage(tweet));
+    sentimentQueue.push(getSentiment(tweet));
   });
-
-  const langResults = await Promise.all(langQueue);
-  for (const langResult of langResults) {
-    sentimentQueue.push(getSentiment(langResult));
-  }
 
   const sentimentResults = await Promise.all(sentimentQueue);
   for (const sentimentResult of sentimentResults) {
@@ -139,19 +133,6 @@ async function getSentiment(tweet) {
       .catch(function (e) {
         reject(e);
       });
-  });
-}
-
-async function guessLanguage(tweet) {
-  return new Promise(function (resolve, reject) {
-    try {
-      const data = tweet;
-      const guess = language.guess(data["text"], null, 1); // limit result to 1
-      data["language"] = (guess[0]["alpha2"]);
-      resolve(data); // return alpha2 code
-    } catch (e) {
-      reject(e);
-    }
   });
 }
 
