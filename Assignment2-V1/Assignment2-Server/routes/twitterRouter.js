@@ -10,7 +10,10 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
-const { SentimentManager, Language } = require('node-nlp');
+const {
+  SentimentManager,
+  Language
+} = require('node-nlp');
 const sentiment = new SentimentManager();
 const language = new Language();
 
@@ -33,41 +36,53 @@ router.get('/:query', async (req, res, next) => {
   }
 });
 
-async function getTwitterData(query){
+async function getTwitterData(query) {
   let data = [];
-  return new Promise(function(resolve,reject){
-    // check cache here
-    // check redis first
-    redisClient.scanAsync(0,"twitter:"+query,data).then(function () {
-      if (data.length == 0) {
-        const azureResults = azureClient.returnBlobNames();
-        // check azure next
-        // if no azure then run downloadTwitterData and store it 
-      } else {
-        // serve from redis
-        resolve(data);
-      }
-    });
+  return new Promise(function (resolve, reject) {
+    try {
+      // check redis first
+      redisClient.scanAsync(0, "twitter:" + query, data).then(async function () {
+        if (data.length == 0) { // if it isn't in redis
+          const azureResults = await azureClient.returnBlobNames(); // pull all blob names from azure
+          // if it is in azure pull blob, cache in redis and serve
+          if (azureResults.includes(query)) {
+            const data = await azureClient.downloadBlob(query);
+            resolve(data);
+          } else { // not in either so grab from twitter
+            const data = await downloadTwitterData(query);
+            resolve(data);
+          }
+        } else {
+          // serve from redis
+          resolve(data);
+        }
+      });
+    } catch (e) {
+      reject(e);
+    }
   });
 }
 
-async function downloadTwitterData(query){
-  return new Promise(function(resolve,reject){
+async function downloadTwitterData(query) {
+  return new Promise(function (resolve, reject) {
     let data = [];
-    
-    client.get('search/tweets', {q:"#"+query+" -filter:retweets", count:100}, function(error, tweets) {
+
+    client.get('search/tweets', {
+      q: "#" + query + " -filter:retweets",
+      count: 100
+    }, function (error, tweets) {
       if (!error) {
-        for(i = 0; i < tweets.statuses.length; i++){
-            tweet = tweets["statuses"][i];
+        for (i = 0; i < tweets.statuses.length; i++) {
+          tweet = tweets["statuses"][i];
 
-            let processedTweet = {};
-            processedTweet["text"] = tweet["text"];
-            processedTweet["date"] = tweet["created_at"];
-            processedTweet["userInfo"] = {};
-            processedTweet["userInfo"]["name"] = tweet["user"]["name"];
-            processedTweet["userInfo"]["screenName"] = tweet["user"]["screen_name"];
+          let processedTweet = {};
+          processedTweet["text"] = tweet["text"];
+          processedTweet["date"] = tweet["created_at"];
+          processedTweet["userInfo"] = {};
+          processedTweet["userInfo"]["name"] = tweet["user"]["name"];
+          processedTweet["userInfo"]["screenName"] = tweet["user"]["screen_name"];
 
-            data.push(processedTweet);
+          data.push(processedTweet);
         }
         resolve(data);
       } else {
@@ -77,12 +92,12 @@ async function downloadTwitterData(query){
   });
 }
 
-async function processTweets(tweets){ // guess lang and check sentiment
+async function processTweets(tweets) { // guess lang and check sentiment
   let data = [];
   let langQueue = [];
   let sentimentQueue = [];
 
-  tweets.forEach(function(tweet){
+  tweets.forEach(function (tweet) {
     langQueue.push(guessLanguage(tweet));
   });
 
@@ -99,23 +114,23 @@ async function processTweets(tweets){ // guess lang and check sentiment
   return data;
 }
 
-async function getSentiment(tweet){
-  return new Promise(function(resolve,reject){
+async function getSentiment(tweet) {
+  return new Promise(function (resolve, reject) {
     sentiment
-      .process(tweet["language"],tweet["text"]) // language, tweet body
-      .then(function(result){
+      .process(tweet["language"], tweet["text"]) // language, tweet body
+      .then(function (result) {
         const data = tweet;
         data["sentiment"] = result["vote"];
         resolve(data); // tweet data + lang + sentiment
       })
-      .catch(function(e){
+      .catch(function (e) {
         reject(e);
       });
   });
 }
 
-async function guessLanguage(tweet){
-  return new Promise(function(resolve,reject){
+async function guessLanguage(tweet) {
+  return new Promise(function (resolve, reject) {
     try {
       const data = tweet;
       const guess = language.guess(data["text"], null, 1); // limit result to 1
@@ -127,22 +142,22 @@ async function guessLanguage(tweet){
   });
 }
 
-async function addToRedis(query,data){
-  return new Promise(function(resolve,reject){
+async function addToRedis(query, data) {
+  return new Promise(function (resolve, reject) {
     try {
-      
-      resolve(); 
+
+      resolve();
     } catch (e) {
       reject(e);
     }
   });
 }
 
-async function addToAzure(query,data){
-  return new Promise(function(resolve,reject){
+async function addToAzure(query, data) {
+  return new Promise(function (resolve, reject) {
     try {
-      
-      resolve(); 
+
+      resolve();
     } catch (e) {
       reject(e);
     }
