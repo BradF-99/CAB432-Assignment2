@@ -10,12 +10,9 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
-const {
-  SentimentManager,
-  Language
-} = require('node-nlp');
+const {SentimentManager} = require('node-nlp');
+
 const sentiment = new SentimentManager();
-const language = new Language();
 
 const redisClient = require("../modules/redisDriver");
 const azureClient = require("../modules/azureDriver");
