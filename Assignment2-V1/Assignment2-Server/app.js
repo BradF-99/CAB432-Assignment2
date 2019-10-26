@@ -5,9 +5,6 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const helmet = require('helmet');
 
-// import custom modules
-const loggerUtil = require("./modules/logger.js");
-
 const indexRouter = require('./routes/index');
 const twitterRouter = require('./routes/twitterRouter');
 
