@@ -1,13 +1,15 @@
+require('dotenv').config();
+
 const express = require('express');
 const router = express.Router();
 
 // to do replace keys with env vars or config file
 const Twitter = require('twitter');
 const client = new Twitter({
-  consumer_key: 'oKVH5nvDsrg80ukJ8LdjUKUg3',
-  consumer_secret: 'FS3FlUCmgUtc9TUJ29M3SM6FyFyZ28bGAipjK67N0GsB5Gdpa8',
-  access_token_key: '1181039439675412481-zXRgkfl5Sr30GlHm77xBihP4TNfgDV',
-  access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
+  consumer_key: process.env.TWITTER_CONSUMER_KEY,
+  consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+  access_token_key: process.env.TWITTER_ACCESS_TOKEN_KEY,
+  access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
 });
 
 const {
