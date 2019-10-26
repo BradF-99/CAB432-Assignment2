@@ -1,6 +1,7 @@
+require('dotenv').config();
 const redis = require("redis");
-const REDIS_URL = process.env.REDIS_URL || "//149.28.165.104:4320";
-const redisClient = redis.createClient(REDIS_URL,{password:"CAB4322019"}); // replace for production deploy
+const REDIS_URL = process.env.REDIS_URL || "//0.0.0.0:6379";
+const redisClient = redis.createClient(REDIS_URL,{password:process.env.REDIS_PASS}); // replace for production deploy
 const bluebird = require("bluebird");
 const loggerUtil = require("./logger.js");
 
@@ -45,7 +46,6 @@ async function scanAsync(cursor, pattern, results) {
             }
         });
 }
-
 
 redisClient.on('connect', () => {
     loggerUtil.log("Established connection to Redis.");
