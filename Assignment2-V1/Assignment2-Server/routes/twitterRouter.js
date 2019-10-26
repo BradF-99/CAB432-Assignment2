@@ -16,15 +16,17 @@ const language = new Language();
 
 const redisClient = require("../modules/redisDriver");
 const azureClient = require("../modules/azureDriver");
+const loggerUtil = require("../modules/logger.js");
 
-router.get('/:query', async (req, res) => {
+router.get('/:query', async (req, res, next) => {
   if (req.params.query) {
     try {
       const tweets = await getTwitterData(req.params.query);
       const data = await processTweets(tweets);
       return res.json(data);
     } catch (e) {
-      next(e); // this will end up in the error handler
+      loggerUtil.error(e);
+      next(e); // this should end up in the error handler
     }
   } else {
     res.send('respond with a resource');
@@ -32,9 +34,27 @@ router.get('/:query', async (req, res) => {
 });
 
 async function getTwitterData(query){
+  let data = [];
+  return new Promise(function(resolve,reject){
+    // check cache here
+    // check redis first
+    redisClient.scanAsync(0,"twitter:"+query,data).then(function () {
+      if (data.length == 0) {
+        const azureResults = azureClient.returnBlobNames();
+        // check azure next
+        // if no azure then run downloadTwitterData and store it 
+      } else {
+        // serve from redis
+        resolve(data);
+      }
+    });
+  });
+}
+
+async function downloadTwitterData(query){
   return new Promise(function(resolve,reject){
     let data = [];
-
+    
     client.get('search/tweets', {q:"#"+query+" -filter:retweets", count:100}, function(error, tweets) {
       if (!error) {
         for(i = 0; i < tweets.statuses.length; i++){
@@ -101,6 +121,28 @@ async function guessLanguage(tweet){
       const guess = language.guess(data["text"], null, 1); // limit result to 1
       data["language"] = (guess[0]["alpha2"]);
       resolve(data); // return alpha2 code
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function addToRedis(query,data){
+  return new Promise(function(resolve,reject){
+    try {
+      
+      resolve(); 
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function addToAzure(query,data){
+  return new Promise(function(resolve,reject){
+    try {
+      
+      resolve(); 
     } catch (e) {
       reject(e);
     }
