@@ -16,7 +16,7 @@ searchBar.addEventListener("keyup", () => {
 });
 
 function retrieveTweets(hashtag) {
-  fetch("http://127.0.0.1:3000/twitter/" + hashtag)
+  fetch("http://prod.backend.cab432.bradfuller.xyz/twitter/" + hashtag)
     .then(function(response) {
       if (response.ok) {
         return response.json();
@@ -33,7 +33,7 @@ function retrieveTweets(hashtag) {
       var numNegativeTweets = 0;
 
       //twitterText.innerHTML = result[0][0];
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < result.length; i++) {
 
         //Count the connotations for tweets.
         switch(result[i].sentiment) {
