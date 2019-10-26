@@ -7,4 +7,47 @@ const bluebird = require("bluebird");
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
-module.exports = redisClient;
+async function getHashData(key) {
+    return new Promise(function (resolve, reject) {
+        redisClient.hgetall(key, function (err, result) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(result)
+            }
+        });
+    });
+}
+
+async function setHashData(key, field, value) {
+    return new Promise(function (resolve, reject) {
+        redisClient.hset(key, field, value, function (err, result) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(result)
+            }
+        });
+    });
+}
+
+async function scanAsync(cursor, pattern, results) {
+    return redisClient.scanAsync(cursor, 'MATCH', pattern, 'COUNT', '1000')
+        .then(function (res) {
+            let keys = res[1];
+            keys.forEach(function (key) {
+                results.push(key);
+            })
+            cursor = res[0];
+            if (!cursor === '0') {
+                return scanAsync(cursor, pattern, results);
+            }
+        });
+}
+
+module.exports = {
+    redisClient: redisClient,
+    getHashData: getHashData,
+    setHashData: setHashData,
+    scanAsync: scanAsync
+};
