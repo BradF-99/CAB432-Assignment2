@@ -49,11 +49,13 @@ async function getTwitterData(query) {
           const azureResults = await azureClient.returnBlobNames(); // pull all blob names from azure
           // if it is in azure pull blob, cache in redis and serve
           if (azureResults.includes(query)) {
-            const data = await azureClient.downloadBlob(query);
-
+            const azureBlob = await azureClient.downloadBlob(query);
+            data = JSON.parse(azureBlob);
+            await addToRedis(query,data);
             resolve(data);
           } else { // not in either so grab from twitter
             const data = await downloadTwitterData(query);
+            await addToAzure(query,data);
             await addToRedis(query,data);
             resolve(data);
           }
@@ -169,7 +171,8 @@ async function addToRedis(query, data) {
 async function addToAzure(query, data) {
   return new Promise(function (resolve, reject) {
     try {
-
+      // Data is value, query is "key" or blob name
+      azureClient.uploadBlob(JSON.stringify(data),query)
       resolve();
     } catch (e) {
       reject(e);
