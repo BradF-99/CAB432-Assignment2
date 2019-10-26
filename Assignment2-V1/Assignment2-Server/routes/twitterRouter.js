@@ -38,22 +38,32 @@ router.get('/:query', async (req, res, next) => {
 
 async function getTwitterData(query) {
   let data = [];
+  let redisResult = [];
+  let key = "twitter:" + query;
+
   return new Promise(function (resolve, reject) {
     try {
       // check redis first
-      redisClient.scanAsync(0, "twitter:" + query, data).then(async function () {
-        if (data.length == 0) { // if it isn't in redis
+      redisClient.scanAsync(0, key, redisResult).then(async function () {
+        if (redisResult.length == 0) { // if it isn't in redis
           const azureResults = await azureClient.returnBlobNames(); // pull all blob names from azure
           // if it is in azure pull blob, cache in redis and serve
           if (azureResults.includes(query)) {
             const data = await azureClient.downloadBlob(query);
+
             resolve(data);
           } else { // not in either so grab from twitter
             const data = await downloadTwitterData(query);
+            await addToRedis(query,data);
             resolve(data);
           }
         } else {
           // serve from redis
+          const redisHash = await redisClient.getHashData(key);
+          const values = Object.values(redisHash);
+          values.forEach(function(value){
+            data.push(JSON.parse(value));
+          });
           resolve(data);
         }
       });
@@ -76,6 +86,7 @@ async function downloadTwitterData(query) {
           tweet = tweets["statuses"][i];
 
           let processedTweet = {};
+          processedTweet["id"] = tweet["id_str"];
           processedTweet["text"] = tweet["text"];
           processedTweet["date"] = tweet["created_at"];
           processedTweet["userInfo"] = {};
@@ -143,14 +154,16 @@ async function guessLanguage(tweet) {
 }
 
 async function addToRedis(query, data) {
-  return new Promise(function (resolve, reject) {
-    try {
-
-      resolve();
-    } catch (e) {
-      reject(e);
-    }
-  });
+  let hashQueue = [];
+  try {
+    data.forEach(function (tweet) {
+      // Key is hashtag, field is the tweet ID and value is the tweet body
+      hashQueue.push(redisClient.setHashData("twitter:"+query, tweet["id"], JSON.stringify(tweet)))
+    });
+    await Promise.all(hashQueue);
+  } catch (e) {
+    throw (e);
+  }
 }
 
 async function addToAzure(query, data) {
