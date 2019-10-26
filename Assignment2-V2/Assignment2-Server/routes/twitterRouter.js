@@ -79,10 +79,10 @@ async function processTweets(tweets){ // guess lang and check sentiment
 async function getSentiment(tweet){
   return new Promise(function(resolve,reject){
     sentiment
-      .process(tweet["text"],tweet["language"]) // language, tweet body
+      .process(tweet["language"],tweet["text"]) // language, tweet body
       .then(function(result){
         const data = tweet;
-        data["sentiment"] = (result["vote"]);
+        data["sentiment"] = result["vote"];
         resolve(data); // tweet data + lang + sentiment
       })
       .catch(function(e){
