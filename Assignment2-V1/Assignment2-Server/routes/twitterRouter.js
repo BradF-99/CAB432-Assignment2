@@ -10,7 +10,9 @@ const client = new Twitter({
   access_token_secret: 'Otk1RnnFfZksxLpDe9cDtf0Olxr3BxCRvgYcOHee2lfNB'
 });
 
-const {SentimentManager} = require('node-nlp');
+const {
+  SentimentManager
+} = require('node-nlp');
 
 const sentiment = new SentimentManager();
 
@@ -48,19 +50,19 @@ async function getTwitterData(query) {
           if (azureResults.includes(query)) {
             const azureBlob = await azureClient.downloadBlob(query);
             data = JSON.parse(azureBlob);
-            await addToRedis(query,data);
+            await addToRedis(query, data);
             resolve(data);
           } else { // not in either so grab from twitter
             const data = await downloadTwitterData(query);
-            await addToAzure(query,data);
-            await addToRedis(query,data);
+            await addToAzure(query, data);
+            await addToRedis(query, data);
             resolve(data);
           }
         } else {
           // serve from redis
           const redisHash = await redisClient.getHashData(key);
           const values = Object.values(redisHash);
-          values.forEach(function(value){
+          values.forEach(function (value) {
             data.push(JSON.parse(value));
           });
           resolve(data);
@@ -138,7 +140,7 @@ async function addToRedis(query, data) {
   try {
     data.forEach(function (tweet) {
       // Key is hashtag, field is the tweet ID and value is the tweet body
-      hashQueue.push(redisClient.setHashData("twitter:"+query, tweet["id"], JSON.stringify(tweet)))
+      hashQueue.push(redisClient.setHashData("twitter:" + query, tweet["id"], JSON.stringify(tweet)))
     });
     await Promise.all(hashQueue);
   } catch (e) {
@@ -150,7 +152,7 @@ async function addToAzure(query, data) {
   return new Promise(function (resolve, reject) {
     try {
       // Data is value, query is "key" or blob name
-      azureClient.uploadBlob(JSON.stringify(data),query)
+      azureClient.uploadBlob(JSON.stringify(data), query)
       resolve();
     } catch (e) {
       reject(e);
