@@ -16,7 +16,7 @@ const credentials = new SharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS
 const pipeline = StorageURL.newPipeline(credentials);
 
 const serviceURL = new ServiceURL(`https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`, pipeline);
-const containerURL = ContainerURL.fromServiceURL(serviceURL, containerName);
+const containerURL = ContainerURL.fromServiceURL(serviceURL, "twitterData");
 
 const aborter = Aborter.timeout(30 * 60 * 1000); // 30 second timeout
 
