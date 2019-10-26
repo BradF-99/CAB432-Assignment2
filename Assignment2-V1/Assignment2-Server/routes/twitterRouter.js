@@ -32,7 +32,7 @@ router.get('/:query', async (req, res, next) => {
       next(e); // this should end up in the error handler
     }
   } else {
-    res.send('respond with a resource');
+    res.send('No hashtag specified');
   }
 });
 
