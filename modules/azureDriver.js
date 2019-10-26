@@ -1,3 +1,4 @@
+require('dotenv').config();
 const {
   Aborter,
   BlockBlobURL,
@@ -7,8 +8,8 @@ const {
   StorageURL
 } = require("@azure/storage-blob");
 
-const STORAGE_ACCOUNT_NAME = "cab432assignment2data";
-const ACCOUNT_ACCESS_KEY = "8cK+JPO184nNHVrcZ0fh9S3f/0DSRdfZRuNzqatqGwU2sQgizuHujd1gVkDvvFUlzhmY0obS520vGQvIAv/LEA==";
+const STORAGE_ACCOUNT_NAME = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+const ACCOUNT_ACCESS_KEY = process.env.AZURE_ACCOUNT_ACCESS_KEY;
 
 const credentials = new SharedKeyCredential(STORAGE_ACCOUNT_NAME, ACCOUNT_ACCESS_KEY);
 const pipeline = StorageURL.newPipeline(credentials);
