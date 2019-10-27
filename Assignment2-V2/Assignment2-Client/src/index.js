@@ -26,69 +26,104 @@ function retrieveTweets(hashtag) {
     .then(function(result) {
       //Clear previous tweets.
       document.getElementById("mainSection").innerHTML = '';
+      document.getElementById("pieChart").innerHTML = '';
 
-      //Track the number of positive, negative and neutral tweets.
-      var numPositiveTweets = 0;
-      var numNeutralTweets = 0;
-      var numNegativeTweets = 0;
+      //Check if any tweets were found with the users provided hashtag.
+      if (result.length === 0) {
+        const errorDiv = document.createElement("div");
+        const errorMessageP = document.createElement("p");
 
-      //twitterText.innerHTML = result[0][0];
-      for (let i = 0; i < 100; i++) {
+        errorDiv.className = "error";
 
-        //Count the connotations for tweets.
-        switch(result[i][2]) {
-          case "positive":
-            numPositiveTweets++;
-            break;
-          case "neutral":
-            numNeutralTweets++;
-            break;
-          case "negative":
-            numNegativeTweets++;
-            break;
+        errorMessageP.innerHTML = "No tweets could be found with the hashtag " + hashtag + ".";
+
+        errorDiv.appendChild(errorMessageP);
+        document.getElementById("mainSection").appendChild(errorDiv);
+
+        console.log("Could not find tweets with the hashtag " + hashtag + ".");
+      } else if (result.length > 0) {
+
+        //Track the number of positive, negative and neutral tweets.
+        var numPositiveTweets = 0;
+        var numNeutralTweets = 0;
+        var numNegativeTweets = 0;
+
+        //twitterText.innerHTML = result[0][0];
+        for (let i = 0; i < result.length; i++) {
+
+          //Count the connotations for tweets.
+          switch(result[i].sentiment) {
+            case "positive":
+              numPositiveTweets++;
+              break;
+            case "neutral":
+              numNeutralTweets++;
+              break;
+            case "negative":
+              numNegativeTweets++;
+              break;
+          }
+
+          createTweetHTMLElements(result[i].userInfo, result[i].text, result[i].sentiment, result[i].date);
         }
 
-        createTweetElement(result[i][0], result[i][2]);
+        drawChart(numPositiveTweets, numNeutralTweets, numNegativeTweets);
       }
-
-      drawChart(numPositiveTweets, numNeutralTweets, numNegativeTweets);
     })
     .catch(function(error) {
       console.log('There has been a problem with your fetch operation: ', error.message);
     });
 }
 
-function createTweetElement(tweetInfo, connotation) {
+function createTweetHTMLElements(userInfo, tweetText, sentiment, timeStamp) {
   //Create new elements.
-  var newDiv = document.createElement("div");
-  var para1 = document.createElement("p");
-  var para2 = document.createElement("p");
+  const tweetDiv = document.createElement("div");
+  const userNameP = document.createElement("p");
+  const userScreenNameP = document.createElement("p");
+  const timeStampP = document.createElement("p");
+  const textP = document.createElement("p");
+  const sentimentP = document.createElement("p");
 
-  //Add the text to the paragraphs.
-  para1.innerHTML = tweetInfo + " ";
-  para2.innerHTML = connotation;
+  //Add the text to the html elements.
+  userNameP.innerHTML = userInfo.name;
+  userScreenNameP.innerHTML = "@" + userInfo.screenName;
+  timeStampP.innerHTML = timeStamp;
+  textP.innerHTML = tweetText;
+  sentimentP.innerHTML = sentiment;
+
+  //Change HTML element's style.
+  userNameP.style.display = "inline-block";
+  userNameP.style.marginRight = "10px";
+  userNameP.style.fontWeight = "900";
+
+  userScreenNameP.style.display = "inline-block";
+  userScreenNameP.style.color = "#66b5ff";
+
+  timeStampP.style.float = "right";
 
   //Change colour of connotation based on the connotation.
-  switch(connotation) {
+  switch(sentiment) {
     case "positive":
-      para2.style.color = "green";
+      sentimentP.style.color = "green";
       break;
     case "neutral":
-      para2.style.color = "orange";
+      sentimentP.style.color = "orange";
       break;
     case "negative":
-      para2.style.color = "red";
+      sentimentP.style.color = "red";
       break;
   }
 
 
-  newDiv.className = "tweet";
+  tweetDiv.className = "tweet";
 
-  newDiv.appendChild(para1);
+  tweetDiv.appendChild(userNameP);
+  tweetDiv.appendChild(userScreenNameP);
+  tweetDiv.appendChild(timeStampP);
+  tweetDiv.appendChild(textP);
+  tweetDiv.appendChild(sentimentP);
 
-  newDiv.appendChild(para2);
-
-  document.getElementById("mainSection").appendChild(newDiv);
+  document.getElementById("mainSection").appendChild(tweetDiv);
   //document.body.insertBefore(newDiv, currentDiv);
 }
 
