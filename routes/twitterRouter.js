@@ -33,7 +33,8 @@ router.get('/:query', async (req, res, next) => {
   if (req.params.query !== "") {
     try {
       const tweets = await getTwitterData(req.params.query);
-      const data = await processTweets(tweets);
+      const data = await processTweets(tweets[0]);
+      res.append('X-DataSource', tweets[1]);
       return res.json(data);
     } catch (e) {
       loggerUtil.error(e);
@@ -48,6 +49,7 @@ async function getTwitterData(query) {
   let data = [];
   let redisResult = [];
   let key = "twitter:" + query;
+  let source = "";
 
   return new Promise(function (resolve, reject) {
     try {
@@ -60,12 +62,14 @@ async function getTwitterData(query) {
             const azureBlob = await azureClient.downloadBlob(query);
             data = JSON.parse(azureBlob);
             await addToRedis(query, data);
-            resolve(data);
+            source = "Azure";
+            resolve([data,source]);
           } else { // not in either so grab from twitter
             const data = await downloadTwitterData(query);
             await addToAzure(query, data);
             await addToRedis(query, data);
-            resolve(data);
+            source = "Twitter";
+            resolve([data,source]);
           }
         } else {
           // serve from redis
@@ -74,7 +78,8 @@ async function getTwitterData(query) {
           values.forEach(function (value) {
             data.push(JSON.parse(value));
           });
-          resolve(data);
+          source = "Redis";
+          resolve([data,source]);
         }
       });
     } catch (e) {
@@ -151,7 +156,7 @@ async function addToRedis(query, data) {
       // Key is hashtag, field is the tweet ID and value is the tweet body
       const key = "twitter:" + query
       hashQueue.push(redisClient.setHashData(key, tweet["id"], JSON.stringify(tweet)))
-      hashQueue.push(redisClient.expire(key, 300)) // expire in 5 mins
+      hashQueue.push(redisClient.expireKey(key, 300)) // expire in 5 mins
     });
     await Promise.all(hashQueue);
   } catch (e) {
