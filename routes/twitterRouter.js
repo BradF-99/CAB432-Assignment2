@@ -21,8 +21,12 @@ const redisClient = require("../modules/redisDriver");
 const azureClient = require("../modules/azureDriver");
 const loggerUtil = require("../modules/logger.js");
 
-router.get('/', function(req, res) {
-  res.send('No hashtag specified');
+router.get('/',  async (req, res, next) => {
+  try {
+    res.send('No hashtag specified');
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.get('/:query', async (req, res, next) => {
@@ -145,7 +149,9 @@ async function addToRedis(query, data) {
   try {
     data.forEach(function (tweet) {
       // Key is hashtag, field is the tweet ID and value is the tweet body
-      hashQueue.push(redisClient.setHashData("twitter:" + query, tweet["id"], JSON.stringify(tweet)))
+      const key = "twitter:" + query
+      hashQueue.push(redisClient.setHashData(key, tweet["id"], JSON.stringify(tweet)))
+      hashQueue.push(redisClient.expire(key, 300)) // expire in 5 mins
     });
     await Promise.all(hashQueue);
   } catch (e) {
