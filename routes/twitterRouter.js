@@ -44,7 +44,7 @@ async function getTwitterData(query) {
   return new Promise(function (resolve, reject) {
     try {
       // check redis first
-      redisClient.scanAsync(0, key, redisResult).then(async function () {
+      redisClient.scanAsync(0, key, redisResult,2).then(async function () {
         if (redisResult.length == 0) { // if it isn't in redis
           const azureResults = await azureClient.returnBlobNames(); // pull all blob names from azure
           // if it is in azure pull blob, cache in redis and serve

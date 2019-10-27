@@ -36,8 +36,8 @@ async function setHashData(key, field, value) {
     });
 }
 
-async function scanAsync(cursor, pattern, results) {
-    return redisClient.scanAsync(cursor, 'MATCH', pattern, 'COUNT', '5')
+async function scanAsync(cursor, pattern, results, count) {
+    return redisClient.scanAsync(cursor, 'MATCH', pattern, 'COUNT', count)
         .then(function (res) {
             let keys = res[1];
             keys.forEach(function (key) {
