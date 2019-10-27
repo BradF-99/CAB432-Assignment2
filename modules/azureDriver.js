@@ -69,6 +69,7 @@ async function downloadBlob(blobName) {
   try {
     const downloadResponse = await blockBlobURL.download(aborter, 0);
     const downloadedContent = await streamToString(downloadResponse.readableStreamBody);
+    aborter.cancelTimer();
     return downloadedContent;
   } catch (e) {
     throw (e);
