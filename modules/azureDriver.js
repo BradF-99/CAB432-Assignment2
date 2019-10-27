@@ -20,6 +20,7 @@ const containerURL = ContainerURL.fromServiceURL(serviceURL, "twitterdata");
 const aborter = Aborter.timeout(process.env.AZURE_ACCESS_TIMEOUT * 60 * 1000); // set in env vars
 
 // read a ReadableStream to a string
+// required as Azure blobs return ReadableStream data
 async function streamToString(readableStream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -39,6 +40,7 @@ async function returnBlobNames() {
   let names = [];
 
   try {
+    // azure returns a stream of blob "markers" so we loop through and get all the names
     do {
       const listBlobsResponse = await containerURL.listBlobFlatSegment(aborter, marker);
       marker = listBlobsResponse.nextMarker;
