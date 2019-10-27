@@ -3,7 +3,6 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 
-// to do replace keys with env vars or config file
 const Twitter = require('twitter');
 const client = new Twitter({
   consumer_key: process.env.TWITTER_CONSUMER_KEY,
