@@ -4,8 +4,9 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const helmet = require('helmet');
-const compression = require('compression')
-const responseTime = require('response-time')
+const compression = require('compression');
+const responseTime = require('response-time');
+const os = require('os');
 
 const indexRouter = require('./routes/index');
 const twitterRouter = require('./routes/twitterRouter');
@@ -28,6 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.append('X-VMHostname', os.hostname());
   next();
 });
 
