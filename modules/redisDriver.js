@@ -50,6 +50,18 @@ async function scanAsync(cursor, pattern, results, count) {
         });
 }
 
+async function expireKey(key,time){
+    return new Promise(function (resolve, reject) {
+        redisClient.expire(key, time, function (err, result) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(result)
+            }
+        });
+    });
+}
+
 redisClient.on('connect', () => {
     loggerUtil.log("Established connection to Redis.");
 });
@@ -63,5 +75,6 @@ redisClient.on('error', err => {
 module.exports = {
     getHashData: getHashData,
     setHashData: setHashData,
-    scanAsync: scanAsync
+    scanAsync: scanAsync,
+    expireKey: expireKey
 };
