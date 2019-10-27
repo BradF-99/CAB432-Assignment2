@@ -4,6 +4,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const helmet = require('helmet');
+const compression = require('compression')
+const responseTime = require('response-time')
 
 const indexRouter = require('./routes/index');
 const twitterRouter = require('./routes/twitterRouter');
@@ -14,6 +16,8 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+app.use(responseTime());
+app.use(compression());
 app.use(logger('dev'));
 app.use(helmet());
 app.use(express.json());
