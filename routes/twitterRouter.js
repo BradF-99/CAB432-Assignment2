@@ -21,8 +21,12 @@ const redisClient = require("../modules/redisDriver");
 const azureClient = require("../modules/azureDriver");
 const loggerUtil = require("../modules/logger.js");
 
+router.get('/', function(req, res) {
+  res.send('No hashtag specified');
+});
+
 router.get('/:query', async (req, res, next) => {
-  if (req.params.query) {
+  if (req.params.query !== "") {
     try {
       const tweets = await getTwitterData(req.params.query);
       const data = await processTweets(tweets);
